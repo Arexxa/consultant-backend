@@ -1,12 +1,15 @@
 // app.js
 const express = require('express');
 const cors = require('cors');
+const registerRoutes = require('./src/routes/registerRoutes');
 
 const app = express();
 const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/register', registerRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello from Express.js!');
