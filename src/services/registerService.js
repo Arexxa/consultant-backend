@@ -5,7 +5,7 @@ const Register = require('../models/Register');
 const { generateTimestamp, dateTime } = require('../utils/timestamp');
 
 
-function getAllUsers(callback) { // Corrected function name
+function getAllUsers(callback) {
     db.query('SELECT * FROM cons_registration', (error, results) => {
         if (error) {
             console.error('Error executing MySQL query:', error);
@@ -13,8 +13,17 @@ function getAllUsers(callback) { // Corrected function name
             return;
         }
         // Map database results to Register objects
-        const registers = results.map(row => new Register(row.userId, row.roleId, row.username, row.password, row.insert_datetime));
-        callback(null, registers);
+        const registers = results.map(row => new Register(row.userId, row.roleId, row.username, null, row.insert_datetime));
+
+        const response = {
+            transaction: {
+                message: 'OK',
+                dateTime: dateTime()
+            },
+            result: registers
+        };
+
+        callback(null, response);
     });
 }
 
