@@ -3,21 +3,21 @@ const bcrypt = require('bcrypt');
 const db = require('../db');
 const { dateTime } = require('../utils/timestamp');
 
-function login(username, password, callback) {
-    // Check if username and password are provided
-    if (!username || !password) {
+function login(email, password, callback) {
+    // Check if email and password are provided
+    if (!email || !password) {
         const response = {
             transaction: {
                 message: 'Error',
-                detail: 'Please provide username and password',
+                detail: 'Please provide email and password',
                 dateTime: dateTime()
             }
         };
         return callback(response, null);
     }
 
-    // Retrieve user data from the database based on the provided username
-    db.query('SELECT * FROM cons_registration WHERE username = ?', [username], (error, results) => {
+    // Retrieve user data from the database based on the provided email
+    db.query('SELECT * FROM cons_profile WHERE email = ?', [email], (error, results) => {
         if (error) {
             console.error('Error executing MySQL query:', error);
             const response = {
@@ -30,12 +30,12 @@ function login(username, password, callback) {
             return callback(response, null);
         }
 
-        // Check if the user with the provided username exists
+        // Check if the user with the provided email exists
         if (results.length === 0) {
             const response = {
                 transaction: {
                     message: 'Error',
-                    detail: 'User not found',
+                    detail: 'Email not found',
                     dateTime: dateTime()
                 }
             };
@@ -72,7 +72,7 @@ function login(username, password, callback) {
             const user = {
                 userId: results[0].userId,
                 roleId: results[0].roleId,
-                username: results[0].username,
+                email: results[0].email,
                 insert_datetime: results[0].insert_datetime
             };
 
