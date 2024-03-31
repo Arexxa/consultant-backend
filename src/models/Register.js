@@ -1,9 +1,10 @@
 // model/Register.js
 class Register {
-    constructor(userId, roleId, username, password, insertDateTime) {
+    constructor(userId, roleId, name, email, password, insertDateTime) {
         this.userId = userId;
         this.roleId = roleId;
-        this.username = username;
+        this.name = name;
+        this.email = email;
         this.password = password;
         this.insertDateTime = insertDateTime;
     }

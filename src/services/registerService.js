@@ -6,14 +6,14 @@ const { generateTimestamp, dateTime } = require('../utils/timestamp');
 
 
 function getAllUsers(callback) {
-    db.query('SELECT * FROM cons_registration', (error, results) => {
+    db.query('SELECT * FROM cons_profile', (error, results) => {
         if (error) {
             console.error('Error executing MySQL query:', error);
             callback(error, null);
             return;
         }
         // Map database results to Register objects
-        const registers = results.map(row => new Register(row.userId, row.roleId, row.username, null, row.insert_datetime));
+        const registers = results.map(row => new Register(row.userId, row.roleId, row.name, row.email, null, row.insert_datetime));
 
         const response = {
             transaction: {
@@ -28,7 +28,7 @@ function getAllUsers(callback) {
 }
 
 function getLastUserId(callback) {
-    db.query('SELECT MAX(userId) AS lastUserId FROM cons_registration', (error, results) => {
+    db.query('SELECT MAX(userId) AS lastUserId FROM cons_profile', (error, results) => {
         if (error) {
             console.error('Error executing MySQL query:', error);
             callback(error, null);
@@ -39,16 +39,27 @@ function getLastUserId(callback) {
     });
 }
 
-function registerUser(username, password, callback) {
+function registerUser(name, email, password, callback) {
     // Set the default role based on the user's role
     let defaultRoleName = 'User'; // Default role is User
 
     // Check if required fields are provided
-    if (!username || !password) {
+    if (!email || !password) {
         const response = {
             transaction: {
                 message: 'Error',
-                detail: 'Please provide username and password',
+                detail: 'Please provide email and password',
+                dateTime: dateTime()
+            }
+        };
+        return callback(response, null);
+    }
+
+    if (!name) {
+        const response = {
+            transaction: {
+                message: 'Error',
+                detail: 'Please provide your name',
                 dateTime: dateTime()
             }
         };
@@ -94,8 +105,8 @@ function registerUser(username, password, callback) {
             }
             const roleId = results[0].roleId;
 
-            // Check if the username already exists
-            db.query('SELECT COUNT(*) AS count FROM cons_registration WHERE username = ?', [username], (error, results) => {
+            // Check if the email already exists
+            db.query('SELECT COUNT(*) AS count FROM cons_profile WHERE email = ?', [email], (error, results) => {
                 if (error) {
                     console.error('Error executing MySQL query:', error);
                     return callback({ error: 'Internal Server Error' }, null);
@@ -105,7 +116,7 @@ function registerUser(username, password, callback) {
                     const response = {
                         transaction: {
                             message: 'Error',
-                            detail: 'Username already exists',
+                            detail: 'Email already exists',
                             dateTime: dateTime()
                         }
                     };
@@ -127,14 +138,14 @@ function registerUser(username, password, callback) {
                     const insertDateTime = generateTimestamp();
 
                     // Insert user data into the database with hashed password
-                    db.query('INSERT INTO cons_registration (userId, roleId, username, password, insert_datetime) VALUES (?, ?, ?, ?, ?)', [userId, roleId, username, hashedPassword, insertDateTime], (error, results) => {
+                    db.query('INSERT INTO cons_profile (userId, roleId, name, email, password, insert_datetime) VALUES (?, ?, ?, ?, ?, ?)', [userId, roleId, name, email, hashedPassword, insertDateTime], (error, results) => {
                         if (error) {
-                            // Handle duplicate username error
+                            // Handle duplicate email error
                             if (error.code === 'ER_DUP_ENTRY') {
                                 const response = {
                                     transaction: {
                                         message: 'Error',
-                                        detail: 'Username already exists',
+                                        detail: 'Email already exists',
                                         dateTime: dateTime()
                                     }
                                 };
@@ -150,7 +161,7 @@ function registerUser(username, password, callback) {
                             },
                             userRegister: {
                                 userId,
-                                username
+                                email
                             }
                         };
                         callback(null, response);

@@ -1,4 +1,4 @@
-// services/registerController.js
+// services/loginController.js
 const loginService = require('../services/loginService');
 
 // Route for login

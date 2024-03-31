@@ -14,9 +14,9 @@ function getAllUsers(req, res) {
 
 // Route for registering a new user
 function registerUser(req, res) {
-    const { username, password } = req.body;
+    const { name, email, password } = req.body;
 
-    registerService.registerUser(username, password, (error, result) => {
+    registerService.registerUser(name, email, password, (error, result) => {
         if (error) {
             if (error.status === 400) {
                 return res.status(400).json({ transaction: error.transaction });

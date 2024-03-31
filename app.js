@@ -17,6 +17,10 @@ app.get('/', (req, res) => {
   res.send('Hello from Express.js!');
 });
 
-app.listen(PORT, () => {
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
+
+app.listen(PORT, '192.168.1.23', () => {
   console.log(`Server is running on port ${PORT}`);
 });
