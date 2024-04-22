@@ -228,4 +228,4 @@ function registerUserWithWorkExperienceAndEducation(name, email, password, addre
     });
 }
 
-module.exports = { getAllUsers, registerUser, getLastUserId, registerUserWithWorkExperience };
+module.exports = { getAllUsers, registerUser, getLastUserId, registerUserWithWorkExperienceAndEducation };
