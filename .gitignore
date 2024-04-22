@@ -1,10 +1,6 @@
 # npm
 node_modules
 package-lock.json
-*.log
-*.gz
-*.log
-*.history/
 dist/
 
 .env
