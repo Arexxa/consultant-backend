@@ -4,6 +4,8 @@ const cors = require('cors');
 const registerRoutes = require('./src/routes/registerRoutes');
 const loginRoutes = require('./src/routes/loginRoutes');
 const adminRegisterRoutes = require('./src/routes/adminRegisterRoutes');
+const workExperienceRoutes = require('./src/routes/workExperienceRoutes');
+const educationRoutes = require('./src/routes/educationRoutes');
 
 const app = express();
 const PORT = 3000;
@@ -16,6 +18,12 @@ app.use('/login', loginRoutes);
 
 app.use('/list', adminRegisterRoutes);
 app.use('/admin', adminRegisterRoutes);
+
+app.use('/experience/detail', workExperienceRoutes);
+app.use('/experience/detail', workExperienceRoutes);
+
+app.use('/education/detail', educationRoutes);
+app.use('/education/detail', educationRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello from Express.js!');
