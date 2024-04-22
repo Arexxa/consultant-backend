@@ -3,7 +3,8 @@ const bcrypt = require('bcrypt');
 const db = require('../db');
 const Register = require('../models/Register');
 const { generateTimestamp, dateTime } = require('../utils/timestamp');
-
+const insertWorkExperience = require('../services/workExperienceService');
+const { insertEducation } = require('../services/educationService');
 
 function getAllUsers(callback) {
     db.query('SELECT * FROM cons_profile', (error, results) => {
@@ -172,4 +173,59 @@ function registerUser(name, email, password, callback) {
     });
 }
 
-module.exports = { getAllUsers, registerUser, getLastUserId };
+function registerUserWithWorkExperienceAndEducation(name, email, password, address, contactNo, city, state, country, profileDescription, workExperience, education, callback) {
+    registerUser(name, email, password, (error, registrationResult) => {
+        if (error) {
+            // If there's an error during user registration, return it
+            return callback(error, null);
+        }
+
+        // Extract userId from the registration result
+        const { userId } = registrationResult.userRegister;
+
+        // Insert work experience data into cons_workexperience table
+        insertWorkExperience(userId, workExperience, (error, workExperienceResult) => {
+            if (error) {
+                // If there's an error during work experience insertion, return it
+                return callback(error, null);
+            }
+
+            // Insert education data into cons_education table
+            insertEducation(userId, education, (error, educationResult) => {
+                if (error) {
+                    // If there's an error during education insertion, return it
+                    return callback(error, null);
+                }
+
+                // Update user profile with address, contact number, city, state, country, and profile description
+                db.query('UPDATE cons_profile SET contact_no = ?, address = ?, city = ?, state = ?, country = ?, profile_description = ? WHERE userId = ?', [contactNo, address, city, state, country, profileDescription, userId], (error, updateResult) => {
+                    if (error) {
+                        console.error('Error updating profile:', error);
+                        // If there's an error during profile update, return it
+                        return callback({ error: 'Internal Server Error' }, null);
+                    }
+
+                    // Merge registration, work experience, education, and profile update results
+                    const response = {
+                        transaction: {
+                            message: 'OK',
+                            dateTime: dateTime()
+                        },
+                        result: {
+                            ...registrationResult,
+                            ...workExperienceResult,
+                            ...educationResult,
+                            address: address,
+                            contactNo: contactNo
+                        }
+                    };
+
+                    // Return combined registration, work experience, education, and profile update result
+                    callback(null, response);
+                });
+            });
+        });
+    });
+}
+
+module.exports = { getAllUsers, registerUser, getLastUserId, registerUserWithWorkExperienceAndEducation };
