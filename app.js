@@ -6,6 +6,7 @@ const loginRoutes = require('./src/routes/loginRoutes');
 const adminRegisterRoutes = require('./src/routes/adminRegisterRoutes');
 const workExperienceRoutes = require('./src/routes/workExperienceRoutes');
 const educationRoutes = require('./src/routes/educationRoutes');
+const applicationRoutes = require('./src/routes/applicationRoutes');
 
 const app = express();
 const PORT = 3000;
@@ -24,6 +25,9 @@ app.use('/experience/detail', workExperienceRoutes);
 
 app.use('/education/detail', educationRoutes);
 app.use('/education/detail', educationRoutes);
+
+app.use('/application/detail', educationRoutes);
+app.use('/application/detail', educationRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello from Express.js!');
