@@ -5,6 +5,7 @@ const Register = require('../models/Register');
 const { generateTimestamp, dateTime } = require('../utils/timestamp');
 const insertWorkExperience = require('../services/workExperienceService');
 const { insertEducation } = require('../services/educationService');
+const { insertApplication } = require('../services/applicationService');
 
 function getAllUsers(callback) {
     db.query('SELECT * FROM cons_profile', (error, results) => {
@@ -173,7 +174,7 @@ function registerUser(name, email, password, callback) {
     });
 }
 
-function registerUserWithWorkExperienceAndEducation(name, email, password, address, contactNo, city, state, country, profileDescription, workExperience, education, callback) {
+function registerUserWithWorkExperienceAndEducationAndApplication(name, email, password, address, contactNo, city, state, country, profileDescription, workExperience, education, application, callback) {
     registerUser(name, email, password, (error, registrationResult) => {
         if (error) {
             // If there's an error during user registration, return it
@@ -197,35 +198,45 @@ function registerUserWithWorkExperienceAndEducation(name, email, password, addre
                     return callback(error, null);
                 }
 
-                // Update user profile with address, contact number, city, state, country, and profile description
-                db.query('UPDATE cons_profile SET contact_no = ?, address = ?, city = ?, state = ?, country = ?, profile_description = ? WHERE userId = ?', [contactNo, address, city, state, country, profileDescription, userId], (error, updateResult) => {
+                // Insert application data into cons_application table
+                insertApplication(userId, application, (error, applicationResult) => {
                     if (error) {
-                        console.error('Error updating profile:', error);
-                        // If there's an error during profile update, return it
-                        return callback({ error: 'Internal Server Error' }, null);
+                        // If there's an error during application insertion, return it
+                        return callback(error, null);
                     }
 
-                    // Merge registration, work experience, education, and profile update results
-                    const response = {
-                        transaction: {
-                            message: 'OK',
-                            dateTime: dateTime()
-                        },
-                        result: {
-                            ...registrationResult,
-                            ...workExperienceResult,
-                            ...educationResult,
-                            address: address,
-                            contactNo: contactNo
+                    // Update user profile with address, contact number, city, state, country, and profile description
+                    db.query('UPDATE cons_profile SET contact_no = ?, address = ?, city = ?, state = ?, country = ?, profile_description = ?, portfolio = ?, website = ? WHERE userId = ?', [contactNo, address, city, state, country, profileDescription, portfolio, website, userId], (error, updateResult) => {
+                        if (error) {
+                            console.error('Error updating profile:', error);
+                            // If there's an error during profile update, return it
+                            return callback({ error: 'Internal Server Error' }, null);
                         }
-                    };
 
-                    // Return combined registration, work experience, education, and profile update result
-                    callback(null, response);
+                        // Merge registration, work experience, education, application, and profile update results
+                        const response = {
+                            transaction: {
+                                message: 'OK',
+                                dateTime: dateTime()
+                            },
+                            result: {
+                                ...registrationResult,
+                                ...workExperienceResult,
+                                ...educationResult,
+                                ...applicationResult,
+                                address: address,
+                                contactNo: contactNo
+                            }
+                        };
+
+                        // Return combined registration, work experience, education, application, and profile update result
+                        callback(null, response);
+                    });
                 });
             });
         });
     });
 }
 
-module.exports = { getAllUsers, registerUser, getLastUserId, registerUserWithWorkExperienceAndEducation };
+
+module.exports = { getAllUsers, registerUser, getLastUserId, registerUserWithWorkExperienceAndEducationAndApplication };

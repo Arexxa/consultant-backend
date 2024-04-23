@@ -4,7 +4,7 @@ const router = express.Router();
 const { getAllUsers, registerUser } = require('../controllers/registerController');
 
 // Route for retrieving all registered users
-router.get('/', getAllUsers);
+router.get('/list', getAllUsers);
 
 // Route for registering a new user
 router.post('/', registerUser);
