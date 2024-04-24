@@ -30,7 +30,8 @@ app.use('/education/detail', educationRoutes);
 app.use('/application/detail', applicationRoutes);
 app.use('/application/detail', applicationRoutes);
 
-app.use('/', profileRoutes);
+app.use('/user/profile', profileRoutes);
+app.use('/user/profile', profileRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello from Express.js!');

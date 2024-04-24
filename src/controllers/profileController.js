@@ -12,4 +12,17 @@ function getUserProfile(req, res) {
     });
 }
 
-module.exports = { getUserProfile };
+function updateUserProfile(req, res) {
+    const userId = req.body.userId;
+    const updatedProfile = req.body.updatedProfile; // Assuming updatedProfile contains updated profile information
+    
+    profileService.updateUserProfile(userId, updatedProfile, (error, result) => {
+        if (error) {
+            res.status(500).json({ error: 'Internal Server Error' });
+            return;
+        }
+        res.json(result);
+    });
+}
+
+module.exports = { getUserProfile, updateUserProfile };
