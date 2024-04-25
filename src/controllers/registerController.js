@@ -28,5 +28,15 @@ function registerUser(req, res) {
     });
 }
 
+function updateRegisterUser(req, res) {
+    const { userId, contactNo, address, city, state, country, profileDescription, portfolio, website } = req.body;
 
-module.exports = { getAllUsers, registerUser };
+    registerService.updateRegisterUser(userId, contactNo, address, city, state, country, profileDescription, portfolio, website, (error, result) => {
+        if (error) {
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        res.status(200).json(result);
+    });
+}
+
+module.exports = { getAllUsers, registerUser, updateRegisterUser };

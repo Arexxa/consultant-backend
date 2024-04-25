@@ -3,7 +3,7 @@ const applicationService = require('../services/applicationService');
 
 function getApplication(req, res) {
     const userId = req.query.userId;
-    applicationService.getEducation(userId, (error, results) => {
+    applicationService.getApplication(userId, (error, results) => {
         if (error) {
             res.status(500).json({ error: 'Internal Server Error' });
             return;
