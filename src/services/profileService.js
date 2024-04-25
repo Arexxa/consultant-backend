@@ -19,19 +19,20 @@ function getUserProfile(userId, callback) {
             p.taggedByAdmin,
             p.adminId,
             p.insert_datetime,
-            w.WorkExperienceID,
-            w.position,
-            w.company,
-            w.currentEmployer,
-            w.description AS work_description,
-            w.startDate AS work_startDate,
-            w.endDate AS work_endDate,
+            w.WorkExperienceID AS workExperienceId,
+            w.position AS workPosition,
+            w.company AS workCompany,
+            w.currentEmployer AS workCurrentEmployer,
+            w.description AS workDescription,
+            w.startDate AS workStartDate,
+            w.endDate AS workEndDate,
+            w.uploadDate,
             e.educationId,
             e.university,
             e.course,
-            e.startDate AS education_startDate,
-            e.endDate AS education_endDate,
-            a.documentID,
+            e.startDate AS educationStartDate,
+            e.endDate AS educationEndDate,
+            a.documentID AS documentId,
             a.documentType,
             a.fileName,
             a.uploadDate
@@ -51,80 +52,129 @@ function getUserProfile(userId, callback) {
                 return callback({ error: 'User not found' }, null);
             }
 
-            const userProfile = results.map(row => ({
-                userId: row.userId,
-                roleId: row.roleId,
-                name: row.name,
-                email: row.email,
-                contact_no: row.contact_no,
-                address: row.address,
-                city: row.city,
-                state: row.state,
-                country: row.country,
-                profile_description: row.profile_description,
-                portfolio: row.portfolio,
-                website: row.website,
-                taggedByAdmin: row.taggedByAdmin,
-                adminId: row.adminId,
-                insert_datetime: row.insert_datetime,
+            const userProfile = {
+                userId: results[0].userId,
+                roleId: results[0].roleId,
+                name: results[0].name,
+                email: results[0].email,
+                contact_no: results[0].contact_no,
+                address: results[0].address,
+                city: results[0].city,
+                state: results[0].state,
+                country: results[0].country,
+                profile_description: results[0].profile_description,
+                portfolio: results[0].portfolio,
+                website: results[0].website,
+                taggedByAdmin: results[0].taggedByAdmin,
+                adminId: results[0].adminId,
+                insert_datetime: results[0].insert_datetime,
                 workExperience: [],
                 education: [],
                 applications: []
-            }));
-            
+            };
+
             // Populate work experiences
             results.forEach(row => {
-                if (row.WorkExperienceID) {
-                    userProfile[0].workExperience.push({
-                        workExperienceId: row.WorkExperienceID,
-                        position: row.position,
-                        company: row.company,
-                        currentEmployer: row.currentEmployer,
-                        description: row.work_description,
-                        startDate: row.work_startDate,
-                        endDate: row.work_endDate
-                    });
+                if (row.workExperienceId) {
+                    // Check if workExperienceId already exists in userProfile.workExperience
+                    const existingWorkExperienceIndex = userProfile.workExperience.findIndex(exp => exp.workExperienceId === row.workExperienceId);
+                    if (existingWorkExperienceIndex !== -1) {
+                        // Replace existing data with new data
+                        userProfile.workExperience[existingWorkExperienceIndex] = {
+                            workExperienceId: row.workExperienceId,
+                            position: row.workPosition,
+                            company: row.workCompany,
+                            currentEmployer: row.workCurrentEmployer,
+                            description: row.workDescription,
+                            startDate: row.workStartDate,
+                            endDate: row.workEndDate,
+                            uploadDate: row.uploadDate
+                        };
+                    } else {
+                        // Add new work experience data
+                        userProfile.workExperience.push({
+                            workExperienceId: row.workExperienceId,
+                            position: row.workPosition,
+                            company: row.workCompany,
+                            currentEmployer: row.workCurrentEmployer,
+                            description: row.workDescription,
+                            startDate: row.workStartDate,
+                            endDate: row.workEndDate,
+                            uploadDate: row.uploadDate
+                        });
+                    }
                 }
             });
-            
+
             // Populate education details
             results.forEach(row => {
                 if (row.educationId) {
-                    userProfile[0].education.push({
-                        educationId: row.educationId,
-                        university: row.university,
-                        course: row.course,
-                        startDate: row.education_startDate,
-                        endDate: row.education_endDate
-                    });
+                    // Check if educationId already exists in userProfile.education
+                    const existingEducationIndex = userProfile.education.findIndex(edu => edu.educationId === row.educationId);
+                    if (existingEducationIndex !== -1) {
+                        // Replace existing data with new data
+                        userProfile.education[existingEducationIndex] = {
+                            educationId: row.educationId,
+                            university: row.university,
+                            course: row.course,
+                            startDate: row.educationStartDate,
+                            endDate: row.educationEndDate
+                        };
+                    } else {
+                        // Add new education data
+                        userProfile.education.push({
+                            educationId: row.educationId,
+                            university: row.university,
+                            course: row.course,
+                            startDate: row.educationStartDate,
+                            endDate: row.educationEndDate
+                        });
+                    }
                 }
             });
-            
+
             // Populate applications
             results.forEach(row => {
-                if (row.documentID) {
-                    userProfile[0].applications.push({
-                        documentId: row.documentID,
-                        documentType: row.documentType,
-                        fileName: row.fileName,
-                        uploadDate: row.uploadDate
-                    });
+                if (row.documentId) {
+                    // Check if documentId already exists in userProfile.applications
+                    const existingApplicationIndex = userProfile.applications.findIndex(app => app.documentId === row.documentId);
+                    if (existingApplicationIndex !== -1) {
+                        // Replace existing data with new data
+                        userProfile.applications[existingApplicationIndex] = {
+                            documentId: row.documentId,
+                            documentType: row.documentType,
+                            fileName: row.fileName,
+                            uploadDate: row.uploadDate
+                        };
+                    } else {
+                        // Add new application data
+                        userProfile.applications.push({
+                            documentId: row.documentId,
+                            documentType: row.documentType,
+                            fileName: row.fileName,
+                            uploadDate: row.uploadDate
+                        });
+                    }
                 }
             });
-            
 
             const response = {
                 transaction: {
                     message: 'OK',
                     dateTime: dateTime()
                 },
-                result: userProfile
+                result: [userProfile]
             };
+
+            // Sort workExperience array by uploadDate in descending order
+            userProfile.workExperience.sort((a, b) => {
+                return b.workExperienceId - a.workExperienceId;
+            });
+
             callback(null, response);
         }
     );
 }
-
 
 // function updateUserProfile(userId, updatedProfile, callback) {
 //     console.log('New profile data:', updatedProfile);
@@ -222,11 +272,12 @@ function updateUserProfile(userId, updatedProfile, callback) {
                         position = ?,
                         company = ?,
                         currentEmployer = ?
-                    WHERE userId = ?`,
+                    WHERE userId = ? and workExperienceId = ?`,
                     [
                         updatedProfile.workExperience.position,
                         updatedProfile.workExperience.company,
                         updatedProfile.workExperience.currentEmployer,
+                        updatedProfile.workExperience.workExperienceId,
                         userId
                     ],
                     (workExperienceUpdateErr, workExperienceUpdateResults) => {
@@ -239,19 +290,76 @@ function updateUserProfile(userId, updatedProfile, callback) {
 
                         console.log('Work experience updated successfully');
 
-                        // Similarly, update education and applications tables here
+                        // Update education
+                        db.query(
+                            `UPDATE cons_education
+                            SET
+                                university = ?,
+                                course = ?,
+                                startDate = ?,
+                                endDate = ?
+                            WHERE userId = ? and educationId =?`,
+                            [
+                                updatedProfile.education.university,
+                                updatedProfile.education.decoursegree,
+                                updatedProfile.education.startDate,
+                                updatedProfile.education.endDate,
+                                updatedProfile.education.educationId,
+                                userId
+                            ],
+                            (educationUpdateErr, educationUpdateResults) => {
+                                if (educationUpdateErr) {
+                                    console.error('Error updating education:', educationUpdateErr);
+                                    return db.rollback(() => {
+                                        callback({ error: 'Internal Server Error' }, null);
+                                    });
+                                }
 
-                        db.commit((commitErr) => {
-                            if (commitErr) {
-                                console.error('Error committing transaction:', commitErr);
-                                return db.rollback(() => {
-                                    callback({ error: 'Internal Server Error' }, null);
-                                });
+                                console.log('Education updated successfully');
+
+                                // Update applications
+                                db.query(
+                                    `UPDATE cons_application
+                                    SET
+                                        documentType = ?,
+                                        fileName = ?,
+                                        fileData = ?,
+                                        uploadDate = ?
+                                    WHERE userId = ? and documentID = ?`,
+                                    [
+                                        updatedProfile.applications.documentType,
+                                        updatedProfile.applications.fileName,
+                                        updatedProfile.applications.fileData,
+                                        updatedProfile.applications.uploadDate,
+                                        updatedProfile.applications.documentID,
+                                        userId
+                                    ],
+                                    (applicationsUpdateErr, applicationsUpdateResults) => {
+                                        if (applicationsUpdateErr) {
+                                            console.error('Error updating applications:', applicationsUpdateErr);
+                                            return db.rollback(() => {
+                                                callback({ error: 'Internal Server Error' }, null);
+                                            });
+                                        }
+                                
+                                        console.log('Applications updated successfully');
+                                
+                                        // Commit the transaction
+                                        db.commit((commitErr) => {
+                                            if (commitErr) {
+                                                console.error('Error committing transaction:', commitErr);
+                                                return db.rollback(() => {
+                                                    callback({ error: 'Internal Server Error' }, null);
+                                                });
+                                            }
+                                
+                                            console.log('Transaction committed successfully');
+                                            callback(null, { message: 'Profile updated successfully' });
+                                        });
+                                    }
+                                );
                             }
-
-                            console.log('Transaction committed successfully');
-                            callback(null, { message: 'Profile updated successfully' });
-                        });
+                        );
                     }
                 );
             }

@@ -2,8 +2,8 @@
 const db = require('../db');
 const { dateTime } = require('../utils/timestamp');
 
-function insertEducation(userId, educations, callback) {
-    const { university, course, startDate, endDate } = educations;
+function insertEducation(userId, education, callback) {
+    const { university, course, startDate, endDate } = education;
 
     db.query('INSERT INTO cons_education (userId, university, course, startDate, endDate) VALUES (?, ?, ?, ?, ?)',
         [userId, university, course, startDate, endDate],

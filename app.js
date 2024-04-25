@@ -1,6 +1,8 @@
 // app.js
 const express = require('express');
 const cors = require('cors');
+const bodyParser = require('body-parser'); // Import bodyParser
+
 const registerRoutes = require('./src/routes/registerRoutes');
 const loginRoutes = require('./src/routes/loginRoutes');
 const adminRegisterRoutes = require('./src/routes/adminRegisterRoutes');
@@ -14,6 +16,12 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use('/register', registerRoutes);
 app.use('/login', loginRoutes);
