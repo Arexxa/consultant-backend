@@ -9,6 +9,6 @@ router.get('/list', getAllUsers);
 // Route for registering a new user
 router.post('/', registerUser);
 
-router.put('/', updateRegisterUser);
+router.put('/update', updateRegisterUser);
 
 module.exports = router;

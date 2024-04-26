@@ -5,11 +5,15 @@ const { dateTime } = require('../utils/timestamp');
 function insertWorkExperience(userId, workExperience, callback) {
     const { position, company, startDate, endDate } = workExperience;
 
-    db.query('INSERT INTO cons_workexperience (userId, position, company, startDate, endDate) VALUES (?, ?, ?, ?, ?)',
+    console.log('Inserting work experience:', userId, position, company, currentEmployer, description, startDate, endDate);
+
+    db.query('INSERT INTO cons_workexperience (userId, position, company, currentEmployer, description, startDate, endDate) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [userId, position, company, startDate, endDate],
         (error, results) => {
             if (error) {
+                console.error('Error executing MySQL query:', error);
                 if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+                    console.log('User ID not found:', userId);
                     const response = {
                         transaction: {
                             message: 'Error',
@@ -19,10 +23,11 @@ function insertWorkExperience(userId, workExperience, callback) {
                     };
                     return callback(response, null);
                 } else {
-                    console.error('Error executing MySQL query:', error);
+                    console.error('Internal Server Error');
                     return callback({ error: 'Internal Server Error' }, null);
                 }
             }
+            console.log('Work experience inserted successfully');
             const response = {
                 transaction: {
                     message: 'OK',

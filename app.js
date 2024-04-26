@@ -30,7 +30,6 @@ app.use('/list', adminRegisterRoutes);
 app.use('/admin', adminRegisterRoutes);
 
 app.use('/experience/detail', workExperienceRoutes);
-app.use('/experience/detail', workExperienceRoutes);
 
 app.use('/education/detail', educationRoutes);
 app.use('/education/detail', educationRoutes);
