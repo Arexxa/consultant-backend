@@ -12,9 +12,9 @@ function getWorkExperience(req, res) {
 }
 
 function insertWorkExperience(req, res) {
-    const { userId, position, company, startDate, endDate } = req.body;
+    const { userId, workExperiences } = req.body;
 
-    experienceService.insertWorkExperience(userId, { position, company, startDate, endDate }, (error, result) => {
+    experienceService.insertWorkExperience(userId, workExperiences, (error, result) => {
         if (error) {
             if (error.status === 400) {
                 return res.status(400).json({ transaction: error.transaction });
