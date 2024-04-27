@@ -1,53 +1,62 @@
 // services/applicationService.js
 const db = require('../db');
-const { dateTime } = require('../utils/timestamp');
+const { generateTimestamp, dateTime } = require('../utils/timestamp');
 const fs = require('fs');
 
+// Modify the insertApplication function to include response message
 function insertApplication(userId, applications, callback) {
-    const { documentType, fileName, fileData, uploadDate } = applications;
+    if (!Array.isArray(applications)) {
+        return callback({ error: 'Applications must be an array' }, null);
+    }
 
-    // Assuming fileData is a base64-encoded string
-    // Decode the base64 data to a Buffer
-    const decodedFileData = Buffer.from(fileData, 'base64');
+    // Insert each application into the database
+    Promise.all(applications.map(application => {
+        const { documentType, fileName, fileData } = application;
+        const uploadDate = generateTimestamp(); // Use generateTimestamp() for uploadDate
 
-    // Save the decoded file data to a temporary file
-    const tempFilePath = `temp/${fileName}`;
-    fs.writeFile(tempFilePath, decodedFileData, (err) => {
-        if (err) {
-            console.error('Error writing file:', err);
-            return callback({ error: 'Error writing file' }, null);
+        // Prepare the data to be inserted into the database
+        const dataToInsert = {
+            userId,
+            documentType,
+            fileName,
+            uploadDate
+        };
+
+        // Add fileData if provided
+        if (fileData) {
+            dataToInsert.fileData = fileData;
         }
 
-        // Insert the application data into the database
-        db.query('INSERT INTO cons_application (userId, documentType, fileName, fileData, uploadDate) VALUES (?, ?, ?, ?, ?)',
-            [userId, documentType, fileName, tempFilePath, uploadDate],
-            (error, results) => {
+        // Insert the application into the database
+        return new Promise((resolve, reject) => {
+            db.query('INSERT INTO cons_application SET ?', dataToInsert, (error, result) => {
                 if (error) {
-                    console.error('Error executing MySQL query:', error);
-                    return callback({ error: 'Internal Server Error' }, null);
+                    console.error('Error inserting application:', error);
+                    return reject({ error: 'Internal Server Error' });
                 }
-
-                const response = {
-                    transaction: {
-                        message: 'OK',
-                        dateTime: dateTime()
-                    },
-                    result: {
-                        message: 'Application inserted successfully'
-                    }
-                };
-
-                // Delete the temporary file after insertion
-                fs.unlink(tempFilePath, (err) => {
-                    if (err) {
-                        console.error('Error deleting file:', err);
-                    }
-                });
-
-                callback(null, response);
+                resolve(result);
             });
+        });
+    }))
+    .then(() => {
+        // All applications inserted successfully
+        const response = {
+            transaction: {
+                message: 'OK',
+                dateTime: dateTime()
+            },
+            result: {
+                message: 'Applications inserted successfully'
+            }
+        };
+        callback(null, response);
+    })
+    .catch(error => {
+        // Handle any errors during insertion
+        callback({ error: 'Internal Server Error' }, null);
     });
 }
+
 
 
 function getApplication(userId, callback) {

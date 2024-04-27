@@ -32,12 +32,9 @@ app.use('/admin', adminRegisterRoutes);
 app.use('/experience/detail', workExperienceRoutes);
 
 app.use('/education/detail', educationRoutes);
-app.use('/education/detail', educationRoutes);
 
 app.use('/application/detail', applicationRoutes);
-app.use('/application/detail', applicationRoutes);
 
-app.use('/user/profile', profileRoutes);
 app.use('/user/profile', profileRoutes);
 
 app.get('/', (req, res) => {

@@ -13,9 +13,9 @@ function getApplication(req, res) {
 }
 
 function insertApplication(req, res) {
-    const { userId, documentType, fileName, fileData, uploadDate } = req.body;
+    const { userId, applications } = req.body;
 
-    applicationService.insertEducation(userId, { documentType, fileName, fileData, uploadDate }, (error, result) => {
+    applicationService.insertApplication(userId, applications, (error, result) => {
         if (error) {
             if (error.status === 400) {
                 return res.status(400).json({ transaction: error.transaction });
@@ -23,7 +23,7 @@ function insertApplication(req, res) {
                 return res.status(500).json({ transaction: error.transaction });
             }
         }
-        res.status(200).json(result);
+        return res.status(200).json(result);
     });
 }
 
