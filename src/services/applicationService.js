@@ -106,4 +106,27 @@ function getApplication(userId, callback) {
         });
 }
 
-module.exports = { insertApplication, getApplication };
+function updateWorkExperience(userId, workExperienceId, workExperienceData, callback) {
+    const { position, company, currentEmployer, description, startDate, endDate } = workExperienceData;
+
+    db.query('UPDATE cons_workexperience SET position = ?, company = ?, currentEmployer = ?, description = ?, startDate = ?, endDate = ? WHERE userId = ? AND WorkExperienceID = ?',
+        [position, company, currentEmployer, description, startDate, endDate, userId, workExperienceId],
+        (error, results) => {
+            if (error) {
+                console.error('Error executing MySQL query:', error);
+                return callback({ error: 'Internal Server Error' }, null);
+            }
+            const response = {
+                transaction: {
+                    message: 'OK',
+                    dateTime: dateTime()
+                },
+                result: {
+                    message: 'Work Experience updated successfully'
+                }
+            };
+            callback(null, response);
+        });
+}
+
+module.exports = { insertApplication, getApplication, updateWorkExperience };

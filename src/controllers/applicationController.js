@@ -27,4 +27,16 @@ function insertApplication(req, res) {
     });
 }
 
-module.exports = { getApplication, insertApplication };
+function updateWorkExperience(req, res) {
+    const { userId, workExperienceId } = req.query;
+    const { position, company, currentEmployer, description, startDate, endDate } = req.body;
+
+    applicationService.updateWorkExperience(userId, workExperienceId, { position, company, currentEmployer, description, startDate, endDate }, (error, result) => {
+        if (error) {
+            return res.status(500).json({ transaction: error.transaction });
+        }
+        res.status(200).json(result);
+    });
+}
+
+module.exports = { getApplication, insertApplication, updateWorkExperience };

@@ -61,4 +61,27 @@ function getEducation(userId, callback) {
         });
 }
 
-module.exports = { insertEducation, getEducation };
+function updateEducation(userId, educationId, education, callback) {
+    const { university, course, startDate, endDate } = education;
+
+    db.query('UPDATE cons_education SET university = ?, course = ?, startDate = ?, endDate = ? WHERE userId = ? AND educationId = ?',
+        [university, course, startDate, endDate, userId, educationId],
+        (error, results) => {
+            if (error) {
+                console.error('Error executing MySQL query:', error);
+                return callback({ error: 'Internal Server Error' }, null);
+            }
+            const response = {
+                transaction: {
+                    message: 'OK',
+                    dateTime: dateTime()
+                },
+                result: {
+                    message: 'Education updated successfully'
+                }
+            };
+            callback(null, response);
+        });
+}
+
+module.exports = { insertEducation, getEducation, updateEducation };
