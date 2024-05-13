@@ -116,4 +116,39 @@ function getWorkExperience(userId, callback) {
     });
 }
 
-module.exports = { insertWorkExperience, getWorkExperience };
+function updateWorkExperience(userId, workExperienceId, workExperienceData, callback) {
+    const { position, company, currentEmployer, description, startDate, endDate } = workExperienceData;
+
+    // Format the start date and end date
+    const formattedStartDate = formatDate(startDate);
+    const formattedEndDate = formatDate(endDate);
+
+    db.query('UPDATE cons_workexperience SET position = ?, company = ?, currentEmployer = ?, description = ?, startDate = ?, endDate = ? WHERE userId = ? AND WorkExperienceID = ?',
+        [position, company, currentEmployer, description, formattedStartDate, formattedEndDate, userId, workExperienceId],
+        (error, results) => {
+            if (error) {
+                console.error('Error executing MySQL query:', error);
+                return callback({ error: 'Internal Server Error' }, null);
+            }
+            const response = {
+                transaction: {
+                    message: 'OK',
+                    dateTime: dateTime()
+                },
+                result: {
+                    message: 'Work Experience updated successfully'
+                }
+            };
+            callback(null, response);
+        });
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const month = (date.getMonth() + 1) < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1;
+    const day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate();
+    const year = date.getFullYear();
+    return `${year}-${month}-${day}`;
+}
+
+module.exports = { insertWorkExperience, getWorkExperience, updateWorkExperience };

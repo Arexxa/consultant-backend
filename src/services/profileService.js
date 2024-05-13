@@ -30,6 +30,7 @@ function getUserProfile(userId, callback) {
             e.educationId,
             e.university,
             e.course,
+            e.domain,
             e.startDate AS educationStartDate,
             e.endDate AS educationEndDate,
             a.documentID AS documentId,
@@ -117,6 +118,7 @@ function getUserProfile(userId, callback) {
                             educationId: row.educationId,
                             university: row.university,
                             course: row.course,
+                            domain: row.domain,
                             startDate: row.educationStartDate,
                             endDate: row.educationEndDate
                         };
@@ -126,6 +128,7 @@ function getUserProfile(userId, callback) {
                             educationId: row.educationId,
                             university: row.university,
                             course: row.course,
+                            domain: row.domain,
                             startDate: row.educationStartDate,
                             endDate: row.educationEndDate
                         });
@@ -212,6 +215,16 @@ function getUserProfile(userId, callback) {
 //     );
 // }
 
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    let month = date.getMonth() + 1;
+    month = month < 10 ? `0${month}` : month;
+    let day = date.getDate();
+    day = day < 10 ? `0${day}` : day;
+    return `${year}-${month}-${day}`;
+}
+
 function updateUserProfile(userId, updatedProfile, callback) {
     console.log('New profile data:', updatedProfile);
 
@@ -271,12 +284,18 @@ function updateUserProfile(userId, updatedProfile, callback) {
                     SET
                         position = ?,
                         company = ?,
-                        currentEmployer = ?
+                        currentEmployer = ?,
+                        description = ?,
+                        startDate = ?,
+                        endDate = ?
                     WHERE userId = ? and workExperienceId = ?`,
                     [
                         updatedProfile.workExperience.position,
                         updatedProfile.workExperience.company,
                         updatedProfile.workExperience.currentEmployer,
+                        updatedProfile.workExperience.description,
+                        formatDate(updatedProfile.workExperience.startDate),
+                        formatDate(updatedProfile.workExperience.endDate),
                         updatedProfile.workExperience.workExperienceId,
                         userId
                     ],
@@ -296,16 +315,18 @@ function updateUserProfile(userId, updatedProfile, callback) {
                             SET
                                 university = ?,
                                 course = ?,
+                                domain = ?,
                                 startDate = ?,
                                 endDate = ?
-                            WHERE userId = ? and educationId =?`,
+                            WHERE userId = ? and educationId = ?`,
                             [
-                                updatedProfile.education.university,
-                                updatedProfile.education.decoursegree,
-                                updatedProfile.education.startDate,
-                                updatedProfile.education.endDate,
-                                updatedProfile.education.educationId,
-                                userId
+                                updatedProfile.education[0].university,
+                                updatedProfile.education[0].course,
+                                updatedProfile.education[0].domain,
+                                formatDate(updatedProfile.education[0].startDate),
+                                formatDate(updatedProfile.education[0].endDate),
+                                userId,
+                                updatedProfile.education[0].educationId
                             ],
                             (educationUpdateErr, educationUpdateResults) => {
                                 if (educationUpdateErr) {

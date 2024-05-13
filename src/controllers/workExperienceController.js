@@ -26,4 +26,16 @@ function insertWorkExperience(req, res) {
     });
 }
 
-module.exports = { getWorkExperience, insertWorkExperience };
+function updateWorkExperience(req, res) {
+    const { userId, workExperienceId } = req.query;
+    const { position, company, currentEmployer, description, startDate, endDate } = req.body;
+
+    experienceService.updateWorkExperience(userId, workExperienceId, { position, company, currentEmployer, description, startDate, endDate }, (error, result) => {
+        if (error) {
+            return res.status(500).json({ transaction: error.transaction });
+        }
+        res.status(200).json(result);
+    });
+}
+
+module.exports = { getWorkExperience, insertWorkExperience, updateWorkExperience };

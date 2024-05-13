@@ -106,14 +106,28 @@ function getApplication(userId, callback) {
         });
 }
 
-function updateWorkExperience(userId, workExperienceId, workExperienceData, callback) {
-    const { position, company, currentEmployer, description, startDate, endDate } = workExperienceData;
+function updateApplication(userId, applicationId, updatedData, callback) {
+    const { documentType, fileName, fileData } = updatedData;
+    const uploadDate = generateTimestamp(); // Use generateTimestamp() for uploadDate
 
-    db.query('UPDATE cons_workexperience SET position = ?, company = ?, currentEmployer = ?, description = ?, startDate = ?, endDate = ? WHERE userId = ? AND WorkExperienceID = ?',
-        [position, company, currentEmployer, description, startDate, endDate, userId, workExperienceId],
-        (error, results) => {
+    // Prepare the data to be updated in the database
+    const dataToUpdate = {
+        documentType,
+        fileName,
+        uploadDate
+    };
+
+    // Add fileData if provided
+    if (fileData) {
+        dataToUpdate.fileData = fileData;
+    }
+
+    // Update the application in the database
+    db.query('UPDATE cons_application SET ? WHERE userId = ? AND documentID = ?',
+        [dataToUpdate, userId, applicationId],
+        (error, result) => {
             if (error) {
-                console.error('Error executing MySQL query:', error);
+                console.error('Error updating application:', error);
                 return callback({ error: 'Internal Server Error' }, null);
             }
             const response = {
@@ -122,11 +136,33 @@ function updateWorkExperience(userId, workExperienceId, workExperienceData, call
                     dateTime: dateTime()
                 },
                 result: {
-                    message: 'Work Experience updated successfully'
+                    message: 'Application updated successfully'
                 }
             };
             callback(null, response);
         });
 }
 
-module.exports = { insertApplication, getApplication, updateWorkExperience };
+function deleteApplication(userId, applicationId, callback) {
+    // Delete the application from the database
+    db.query('DELETE FROM cons_application WHERE userId = ? AND documentID = ?',
+        [userId, applicationId],
+        (error, result) => {
+            if (error) {
+                console.error('Error deleting application:', error);
+                return callback({ error: 'Internal Server Error' }, null);
+            }
+            const response = {
+                transaction: {
+                    message: 'OK',
+                    dateTime: dateTime()
+                },
+                result: {
+                    message: 'Application deleted successfully'
+                }
+            };
+            callback(null, response);
+        });
+}
+
+module.exports = { insertApplication, getApplication, updateApplication, deleteApplication };

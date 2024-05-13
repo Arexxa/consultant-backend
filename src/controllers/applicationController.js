@@ -27,16 +27,37 @@ function insertApplication(req, res) {
     });
 }
 
-function updateWorkExperience(req, res) {
-    const { userId, workExperienceId } = req.query;
-    const { position, company, currentEmployer, description, startDate, endDate } = req.body;
+function updateApplication(req, res) {
+    const userId = req.query.userId;
+    const documentId = req.query.documentId;
+    const updatedData = req.body;
 
-    applicationService.updateWorkExperience(userId, workExperienceId, { position, company, currentEmployer, description, startDate, endDate }, (error, result) => {
+    applicationService.updateApplication(userId, documentId, updatedData, (error, result) => {
         if (error) {
-            return res.status(500).json({ transaction: error.transaction });
+            if (error.status === 400) {
+                return res.status(400).json({ transaction: error.transaction });
+            } else {
+                return res.status(500).json({ transaction: error.transaction });
+            }
         }
-        res.status(200).json(result);
+        return res.status(200).json(result);
     });
 }
 
-module.exports = { getApplication, insertApplication, updateWorkExperience };
+function deleteApplication(req, res) {
+    const userId = req.query.userId;
+    const documentId = req.query.documentId;
+
+    applicationService.deleteApplication(userId, documentId, (error, result) => {
+        if (error) {
+            if (error.status === 400) {
+                return res.status(400).json({ transaction: error.transaction });
+            } else {
+                return res.status(500).json({ transaction: error.transaction });
+            }
+        }
+        return res.status(200).json(result);
+    });
+}
+
+module.exports = { getApplication, insertApplication, updateApplication, deleteApplication };

@@ -12,9 +12,9 @@ function getEducation(req, res) {
 }
 
 function insertEducation(req, res) {
-    const { userId, university, course, startDate, endDate } = req.body;
+    const { userId, university, course, domain, startDate, endDate } = req.body;
 
-    educationService.insertEducation(userId, { university, course, startDate, endDate }, (error, result) => {
+    educationService.insertEducation(userId, { university, course, domain, startDate, endDate }, (error, result) => {
         if (error) {
             if (error.status === 400) {
                 return res.status(400).json({ transaction: error.transaction });
@@ -28,13 +28,13 @@ function insertEducation(req, res) {
 
 function updateEducation(req, res) {
     const { userId, educationId } = req.query;
-    const { university, course, startDate, endDate } = req.body;
+    const { university, course, domain, startDate, endDate } = req.body;
 
-    educationService.updateEducation(userId, educationId, { university, course, startDate, endDate }, (error, result) => {
-        if (error) {
-            return res.status(500).json({ transaction: error.transaction });
-        }
-        res.status(200).json(result);
+    educationService.updateEducation(userId, educationId, { university, course, domain, startDate, endDate }, (error, result) => {
+      if (error) {
+        return res.status(500).json({ transaction: error.transaction });
+      }
+      res.status(200).json(result);
     });
 }
 
