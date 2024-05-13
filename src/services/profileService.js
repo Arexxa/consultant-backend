@@ -179,42 +179,6 @@ function getUserProfile(userId, callback) {
     );
 }
 
-// function updateUserProfile(userId, updatedProfile, callback) {
-//     console.log('New profile data:', updatedProfile);
-
-//     if (typeof callback !== 'function') {
-//         console.error('Callback is not a function');
-//         // Return an error if callback is missing or not a function
-//         return;
-//     }
-
-//     db.query(
-//         'UPDATE cons_profile SET name = ?, email = ?, contact_no = ?, address = ?, city = ?, state = ?, country = ?, profile_description = ?, portfolio = ?, website = ? WHERE userId = ?',
-//         [
-//             updatedProfile.name,
-//             updatedProfile.email,
-//             updatedProfile.contact_no,
-//             updatedProfile.address,
-//             updatedProfile.city,
-//             updatedProfile.state,
-//             updatedProfile.country,
-//             updatedProfile.profile_description,
-//             updatedProfile.portfolio,
-//             updatedProfile.website,
-//             userId
-//         ],
-//         (error, results) => {
-//             if (error) {
-//                 console.error('Error updating cons_profile:', error);
-//                 return callback({ error: 'Internal Server Error' }, null);
-//             }
-
-//             console.log('Profile updated successfully');
-//             callback(null, { message: 'Profile updated successfully' });
-//         }
-//     );
-// }
-
 function formatDate(dateString) {
     const date = new Date(dateString);
     const year = date.getFullYear();
