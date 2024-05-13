@@ -106,4 +106,63 @@ function getApplication(userId, callback) {
         });
 }
 
-module.exports = { insertApplication, getApplication };
+function updateApplication(userId, applicationId, updatedData, callback) {
+    const { documentType, fileName, fileData } = updatedData;
+    const uploadDate = generateTimestamp(); // Use generateTimestamp() for uploadDate
+
+    // Prepare the data to be updated in the database
+    const dataToUpdate = {
+        documentType,
+        fileName,
+        uploadDate
+    };
+
+    // Add fileData if provided
+    if (fileData) {
+        dataToUpdate.fileData = fileData;
+    }
+
+    // Update the application in the database
+    db.query('UPDATE cons_application SET ? WHERE userId = ? AND documentID = ?',
+        [dataToUpdate, userId, applicationId],
+        (error, result) => {
+            if (error) {
+                console.error('Error updating application:', error);
+                return callback({ error: 'Internal Server Error' }, null);
+            }
+            const response = {
+                transaction: {
+                    message: 'OK',
+                    dateTime: dateTime()
+                },
+                result: {
+                    message: 'Application updated successfully'
+                }
+            };
+            callback(null, response);
+        });
+}
+
+function deleteApplication(userId, applicationId, callback) {
+    // Delete the application from the database
+    db.query('DELETE FROM cons_application WHERE userId = ? AND documentID = ?',
+        [userId, applicationId],
+        (error, result) => {
+            if (error) {
+                console.error('Error deleting application:', error);
+                return callback({ error: 'Internal Server Error' }, null);
+            }
+            const response = {
+                transaction: {
+                    message: 'OK',
+                    dateTime: dateTime()
+                },
+                result: {
+                    message: 'Application deleted successfully'
+                }
+            };
+            callback(null, response);
+        });
+}
+
+module.exports = { insertApplication, getApplication, updateApplication, deleteApplication };

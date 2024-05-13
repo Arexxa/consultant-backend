@@ -27,4 +27,37 @@ function insertApplication(req, res) {
     });
 }
 
-module.exports = { getApplication, insertApplication };
+function updateApplication(req, res) {
+    const userId = req.query.userId;
+    const documentId = req.query.documentId;
+    const updatedData = req.body;
+
+    applicationService.updateApplication(userId, documentId, updatedData, (error, result) => {
+        if (error) {
+            if (error.status === 400) {
+                return res.status(400).json({ transaction: error.transaction });
+            } else {
+                return res.status(500).json({ transaction: error.transaction });
+            }
+        }
+        return res.status(200).json(result);
+    });
+}
+
+function deleteApplication(req, res) {
+    const userId = req.query.userId;
+    const documentId = req.query.documentId;
+
+    applicationService.deleteApplication(userId, documentId, (error, result) => {
+        if (error) {
+            if (error.status === 400) {
+                return res.status(400).json({ transaction: error.transaction });
+            } else {
+                return res.status(500).json({ transaction: error.transaction });
+            }
+        }
+        return res.status(200).json(result);
+    });
+}
+
+module.exports = { getApplication, insertApplication, updateApplication, deleteApplication };
