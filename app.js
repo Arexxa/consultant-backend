@@ -10,6 +10,8 @@ const workExperienceRoutes = require('./src/routes/workExperienceRoutes');
 const educationRoutes = require('./src/routes/educationRoutes');
 const applicationRoutes = require('./src/routes/applicationRoutes');
 const profileRoutes = require('./src/routes/profileRoutes');
+const companyRoutes = require('./src/routes/companyRoutes');
+const registerConsultantRoute = require('./src/routes/registerConsultantRoute');
 
 const app = express();
 const PORT = 3000;
@@ -36,6 +38,10 @@ app.use('/education/detail', educationRoutes);
 app.use('/application/detail', applicationRoutes);
 
 app.use('/user/profile', profileRoutes);
+
+app.use('/company/detail', companyRoutes);
+app.use('/register/consultant', registerConsultantRoute);
+
 
 app.get('/', (req, res) => {
   res.send('Hello from Express.js!');
