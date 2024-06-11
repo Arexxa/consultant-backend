@@ -57,8 +57,6 @@ function insertApplication(userId, applications, callback) {
     });
 }
 
-
-
 function getApplication(userId, callback) {
     db.query('SELECT * FROM cons_application WHERE userId = ?',
         [userId],
