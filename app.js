@@ -14,6 +14,7 @@ const registerConsultantRoute = require('./src/routes/registerConsultantRoute');
 const consultantRoutes = require('./src/routes/consultantRoutes');
 const pdfRoutes = require('./src/routes/pdfRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
+const logger = require('./src/utils/logger');
 
 const app = express();
 const PORT = 3000;
@@ -48,6 +49,17 @@ app.use('/admin/detail', adminRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello from Express.js!');
+});
+
+// Middleware to log all requests
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
+});
+
+app.use((err, req, res, next) => {
+  logger.error(`Unhandled error: ${err.message}`);
+  res.status(500).json({ error: 'Internal Server Error' });
 });
 
 // app.listen(PORT, () => {

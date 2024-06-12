@@ -1,5 +1,7 @@
 const db = require('../db');
 const { generateTimestamp, dateTime } = require('../utils/timestamp');
+const { generateErrorResponse, generateSuccessResponse } = require('../utils/response');
+const logger = require('../utils/logger');
 
 function getUserList(callback) {
     db.query(
@@ -115,17 +117,12 @@ function addOrUpdateNote(userId, noteId, noteDetail, callback) {
             [title, description, currentDatetime, userId, noteId],
             (updateError, updateResults) => {
                 if (updateError) {
-                    console.error(`Error updating note for userId ${userId}: ${updateError.message}`);
-                    return callback({ error: 'Internal Server Error' }, null);
+                    logger.error(`Error updating note for userId ${userId}: ${updateError.message}`);
+                    return callback(generateErrorResponse('Internal Server Error'), null);
                 }
 
-                const response = {
-                    transaction: {
-                        message: 'Note updated successfully',
-                        dateTime: currentDatetime
-                    }
-                };
-                console.log(`Note updated for userId ${userId}`);
+                const response = generateSuccessResponse({ message: 'Note updated successfully' });
+                logger.info(`Note updated for userId ${userId}`);
                 callback(null, response);
             }
         );
@@ -136,17 +133,12 @@ function addOrUpdateNote(userId, noteId, noteDetail, callback) {
             [userId, title, description, currentDatetime],
             (insertError, insertResults) => {
                 if (insertError) {
-                    console.error(`Error inserting note for userId ${userId}: ${insertError.message}`);
-                    return callback({ error: 'Internal Server Error' }, null);
+                    logger.error(`Error inserting note for userId ${userId}: ${insertError.message}`);
+                    return callback(generateErrorResponse('Internal Server Error'), null);
                 }
 
-                const response = {
-                    transaction: {
-                        message: 'Note added successfully',
-                        dateTime: currentDatetime
-                    }
-                };
-                console.log(`Note added for userId ${userId}`);
+                const response = generateSuccessResponse({ message: 'Note added successfully' });
+                logger.info(`Note added for userId ${userId}`);
                 callback(null, response);
             }
         );
@@ -154,28 +146,21 @@ function addOrUpdateNote(userId, noteId, noteDetail, callback) {
 }
 
 const updateUserStatus = (userId, status, callback) => {
-    const currentDatetime = dateTime();
-  
     db.query(
       'UPDATE cons_profile SET status = ? WHERE userId = ?',
       [status, userId],
       (error, results) => {
         if (error) {
-          console.error(`Error updating status for userId ${userId}: ${error.message}`);
-          return callback({ error: 'Internal Server Error' }, null);
+          logger.error(`Error updating status for userId ${userId}: ${error.message}`);
+          return callback(generateErrorResponse('Internal Server Error'), null);
         }
-  
-        const response = {
-          transaction: {
-            message: 'Status updated successfully',
-            dateTime: currentDatetime
-          }
-        };
-        console.log(`Status updated for userId ${userId}`);
+
+        const response = generateSuccessResponse({ message: 'Status updated successfully' });
+        logger.info(`Status updated for userId ${userId}`);
         callback(null, response);
       }
     );
-  };
+};
 
 module.exports = { getUserList, addOrUpdateNote, updateUserStatus };
 

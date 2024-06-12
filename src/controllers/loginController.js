@@ -1,21 +1,18 @@
-// services/loginController.js
+// controllers/loginController.js
 const loginService = require('../services/loginService');
+const logger = require('../utils/logger');
 
-// Route for login
 function login(req, res) {
     const { email, password } = req.body;
 
     loginService.login(email, password, (error, result) => {
         if (error) {
-            if (error.status === 400) {
-                return res.status(400).json({ transaction: error.transaction });
-            } else {
-                return res.status(500).json({ transaction: error.transaction });
-            }
+            logger.error(`Login failed: ${error.transaction.detail}`);
+            return res.status(error.status).json({ transaction: error.transaction });
         }
+        logger.info(`Login response sent for user ${result.user.userId}`);
         res.status(200).json(result);
     });
 }
-
 
 module.exports = { login };

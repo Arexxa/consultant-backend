@@ -1,74 +1,40 @@
 // services/loginService.js
 const bcrypt = require('bcrypt');
 const db = require('../db');
-const { dateTime } = require('../utils/timestamp');
+const { generateErrorResponse, generateSuccessResponse } = require('../utils/response');
+const logger = require('../utils/logger');
 
 function login(email, password, callback) {
-    // Check if email and password are provided
     if (!email || !password) {
-        const response = {
-            transaction: {
-                message: 'Error',
-                detail: 'Please provide email and password',
-                dateTime: dateTime()
-            }
-        };
-        return callback(response, null);
+        const errorResponse = generateErrorResponse('Please provide email and password', 'Missing email or password', 400);
+        logger.warn(`Login attempt failed: ${errorResponse.transaction.detail}`);
+        return callback(errorResponse, null);
     }
 
-    // Retrieve user data from the database based on the provided email
     db.query('SELECT * FROM cons_profile WHERE email = ?', [email], (error, results) => {
         if (error) {
-            console.error('Error executing MySQL query:', error);
-            const response = {
-                transaction: {
-                    message: 'Error',
-                    detail: 'Internal Server Error',
-                    dateTime: dateTime()
-                }
-            };
-            return callback(response, null);
+            logger.error(`Error executing MySQL query: ${error.message}`);
+            return callback(generateErrorResponse('Internal Server Error', 'Database query error'), null);
         }
 
-        // Check if the user with the provided email exists
         if (results.length === 0) {
-            const response = {
-                transaction: {
-                    message: 'Error',
-                    detail: 'Email not found',
-                    dateTime: dateTime()
-                }
-            };
-            return callback(response, null);
+            const errorResponse = generateErrorResponse('Email not found', 'User does not exist', 400);
+            logger.warn(`Login attempt failed: ${errorResponse.transaction.detail} for email ${email}`);
+            return callback(errorResponse, null);
         }
 
-        // Compare the provided password with the hashed password stored in the database
         bcrypt.compare(password, results[0].password, (compareError, isMatch) => {
             if (compareError) {
-                console.error('Error comparing passwords:', compareError);
-                const response = {
-                    transaction: {
-                        message: 'Error',
-                        detail: 'Internal Server Error',
-                        dateTime: dateTime()
-                    }
-                };
-                return callback(response, null);
+                logger.error(`Error comparing passwords: ${compareError.message}`);
+                return callback(generateErrorResponse('Internal Server Error', 'Password comparison error'), null);
             }
 
-            // Check if the password matches
             if (!isMatch) {
-                const response = {
-                    transaction: {
-                        message: 'Error',
-                        detail: 'Invalid credentials',
-                        dateTime: dateTime()
-                    }
-                };
-                return callback(response, null);
+                const errorResponse = generateErrorResponse('Invalid credentials', 'Password does not match', 400);
+                logger.warn(`Login attempt failed: ${errorResponse.transaction.detail} for email ${email}`);
+                return callback(errorResponse, null);
             }
 
-            // If the credentials are valid, return the user data excluding the password
             const user = {
                 userId: results[0].userId,
                 roleId: results[0].roleId,
@@ -76,15 +42,8 @@ function login(email, password, callback) {
                 insert_datetime: results[0].insert_datetime
             };
 
-            const response = {
-                transaction: {
-                    message: 'OK',
-                    dateTime: dateTime()
-                },
-                user: user
-            };
-
-            callback(null, response);
+            logger.info(`Login successful for user ${user.userId}`);
+            return callback(null, generateSuccessResponse({ user }));
         });
     });
 }

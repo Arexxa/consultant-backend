@@ -1,5 +1,7 @@
 const db = require('../db');
 const { dateTime } = require('../utils/timestamp');
+const { generateErrorResponse, generateSuccessResponse } = require('../utils/response');
+const logger = require('../utils/logger');
 
 function getUserProfile(userId, callback) {
     db.query(
@@ -45,12 +47,13 @@ function getUserProfile(userId, callback) {
         [userId],
         (error, results) => {
             if (error) {
-                console.error('Error executing MySQL query:', error);
-                return callback({ error: 'Internal Server Error' }, null);
+                logger.error(`Error executing MySQL query: ${error.message}`);
+                return callback(generateErrorResponse('Internal Server Error', 'Database query error'), null);
             }
 
             if (results.length === 0) {
-                return callback({ error: 'User not found' }, null);
+                logger.warn(`User profile not found for userId: ${userId}`);
+                return callback(generateErrorResponse('User not found'), null);
             }
 
             const userProfile = {
@@ -161,20 +164,14 @@ function getUserProfile(userId, callback) {
                 }
             });
 
-            const response = {
-                transaction: {
-                    message: 'OK',
-                    dateTime: dateTime()
-                },
-                result: [userProfile]
-            };
+            const response = generateSuccessResponse({ result: [userProfile] });
 
             // Sort workExperience array by uploadDate in descending order
             userProfile.workExperience.sort((a, b) => {
                 return b.workExperienceId - a.workExperienceId;
             });
 
-            callback(null, response);
+            return callback(null, response);
         }
     );
 }
@@ -190,8 +187,6 @@ function formatDate(dateString) {
 }
 
 function updateUserProfile(userId, updatedProfile, callback) {
-    console.log('New profile data:', updatedProfile);
-
     if (typeof callback !== 'function') {
         console.error('Callback is not a function');
         // Return an error if callback is missing or not a function
@@ -200,8 +195,8 @@ function updateUserProfile(userId, updatedProfile, callback) {
 
     db.beginTransaction((beginTransactionErr) => {
         if (beginTransactionErr) {
-            console.error('Error beginning transaction:', beginTransactionErr);
-            return callback({ error: 'Internal Server Error' }, null);
+            logger.error(`Error beginning transaction: ${beginTransactionErr.message}`);
+            return callback(generateErrorResponse('Internal Server Error'), null);
         }
 
         // Update profile details
@@ -234,13 +229,12 @@ function updateUserProfile(userId, updatedProfile, callback) {
             ],
             (profileUpdateErr, profileUpdateResults) => {
                 if (profileUpdateErr) {
-                    console.error('Error updating profile:', profileUpdateErr);
+                    logger.error(`Error updating profile: ${profileUpdateErr.message}`);
                     return db.rollback(() => {
-                        callback({ error: 'Internal Server Error' }, null);
+                        callback(generateErrorResponse('Internal Server Error'), null);
                     });
                 }
-
-                console.log('Profile updated successfully');
+                logger.info(`Profile updated successfully for userId: ${userId}`);
 
                 // Update work experience
                 db.query(
@@ -265,13 +259,12 @@ function updateUserProfile(userId, updatedProfile, callback) {
                     ],
                     (workExperienceUpdateErr, workExperienceUpdateResults) => {
                         if (workExperienceUpdateErr) {
-                            console.error('Error updating work experience:', workExperienceUpdateErr);
+                            logger.error(`Error updating work experience: ${workExperienceUpdateErr.message}`);
                             return db.rollback(() => {
-                                callback({ error: 'Internal Server Error' }, null);
+                                callback(generateErrorResponse('Internal Server Error'), null);
                             });
                         }
-
-                        console.log('Work experience updated successfully');
+                        logger.info('Work experience updated successfully');
 
                         // Update education
                         db.query(
@@ -294,13 +287,12 @@ function updateUserProfile(userId, updatedProfile, callback) {
                             ],
                             (educationUpdateErr, educationUpdateResults) => {
                                 if (educationUpdateErr) {
-                                    console.error('Error updating education:', educationUpdateErr);
+                                    logger.error(`Error updating education: ${educationUpdateErr.message}`);
                                     return db.rollback(() => {
-                                        callback({ error: 'Internal Server Error' }, null);
+                                        callback(generateErrorResponse('Internal Server Error'), null);
                                     });
                                 }
-
-                                console.log('Education updated successfully');
+                                logger.info('Education updated successfully');
 
                                 // Update applications
                                 db.query(
@@ -321,25 +313,27 @@ function updateUserProfile(userId, updatedProfile, callback) {
                                     ],
                                     (applicationsUpdateErr, applicationsUpdateResults) => {
                                         if (applicationsUpdateErr) {
-                                            console.error('Error updating applications:', applicationsUpdateErr);
+                                            logger.error(`Error updating applications: ${applicationsUpdateErr.message}`);
                                             return db.rollback(() => {
-                                                callback({ error: 'Internal Server Error' }, null);
+                                                callback(generateErrorResponse('Internal Server Error'), null);
                                             });
                                         }
-                                
-                                        console.log('Applications updated successfully');
-                                
+                                        logger.info('Applications updated successfully');
+
+                                        // Construct success response
+                                        const response = generateSuccessResponse({ message: 'Profile updated successfully' });
+
                                         // Commit the transaction
                                         db.commit((commitErr) => {
                                             if (commitErr) {
-                                                console.error('Error committing transaction:', commitErr);
+                                                logger.error(`Error committing transaction: ${commitErr.message}`);
                                                 return db.rollback(() => {
-                                                    callback({ error: 'Internal Server Error' }, null);
+                                                    callback(generateErrorResponse('Internal Server Error'), null);
                                                 });
                                             }
-                                
-                                            console.log('Transaction committed successfully');
-                                            callback(null, { message: 'Profile updated successfully' });
+                                            logger.info('Transaction committed successfully');
+                                            // Callback with success response
+                                            return callback(null, response);
                                         });
                                     }
                                 );
