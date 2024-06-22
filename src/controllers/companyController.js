@@ -1,13 +1,16 @@
+// controllers/companyController.js
 const companyService = require('../services/companyService');
+const logger = require('../utils/logger');
 
 function getCompany(req, res) {
     const userId = req.query.userId;
     companyService.getCompany(userId, (error, results) => {
         if (error) {
-            res.status(500).json({ error: 'Internal Server Error' });
+            logger.error(`Error getting company detail for userId ${userId}: ${error.transaction.detail}`);
+            res.status(error.status || 500).json({ transaction: error.transaction });
             return;
         }
-        res.json(results);
+        res.status(200).json(results);
     });
 }
 
@@ -16,12 +19,11 @@ function insertCompany(req, res) {
 
     companyService.insertCompany(userId, { company, jobTitle, description }, (error, result) => {
         if (error) {
-            if (error.status === 400) {
-                return res.status(400).json({ transaction: error.transaction });
-            } else {
-                return res.status(500).json({ transaction: error.transaction });
-            }
+            logger.error(`Error inserting company details for userId ${userId}: ${error.transaction.detail}`);
+            res.status(error.status || 500).json({ transaction: error.transaction });
+            return;
         }
+        logger.info(`Company details inserted successfully for userId ${userId}`);
         res.status(200).json(result);
     });
 }
@@ -31,10 +33,13 @@ function updateCompany(req, res) {
     const { company, jobTitle, description } = req.body;
 
     companyService.updateCompany(userId, companyId, { company, jobTitle, description }, (error, result) => {
-      if (error) {
-        return res.status(500).json({ transaction: error.transaction });
-      }
-      res.status(200).json(result);
+        if (error) {
+            logger.error(`Error updating company details for userId ${userId}: ${error.transaction.detail}`);
+            res.status(error.status || 500).json({ transaction: error.transaction });
+            return;
+        }
+        logger.info(`Company details updated successfully for userId ${userId}`);
+        res.status(200).json(result);
     });
 }
 

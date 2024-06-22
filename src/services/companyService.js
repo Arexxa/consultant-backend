@@ -1,6 +1,8 @@
 // services/educationService.js
 const db = require('../db');
 const { generateTimestamp, dateTime } = require('../utils/timestamp');
+const { generateErrorResponse, generateSuccessResponse } = require('../utils/response');
+const logger = require('../utils/logger');
 
 function insertCompany(userId, companyDetail, callback) {
     const { company, jobTitle, description } = companyDetail;
@@ -10,28 +12,19 @@ function insertCompany(userId, companyDetail, callback) {
         (error, results) => {
             if (error) {
                 if (error.code === 'ER_NO_REFERENCED_ROW_2') {
-                    const response = {
-                        transaction: {
-                            message: 'Error',
-                            detail: 'User ID not found',
-                            dateTime: dateTime()
-                        }
-                    };
-                    return callback(response, null);
+                    logger.error(`User ID not found: ${userId} - ${error.message}`);
+                    return callback(generateErrorResponse('User ID not found', 'User ID not found', 400), null);
                 } else {
-                    console.error('Error executing MySQL query:', error);
-                    return callback({ error: 'Internal Server Error' }, null);
+                    logger.error(`Error executing MySQL query: ${error.message}`);
+                    return callback(generateErrorResponse('Internal Server Error', 'Error inserting company details', 500), null);
                 }
             }
-            const response = {
-                transaction: {
-                    message: 'OK',
-                    dateTime: dateTime()
-                },
+            const response = generateSuccessResponse({
                 result: {
-                    message: 'Company Details inserted successfully'
+                    message: 'Company details inserted successfully'
                 }
-            };
+            });
+            logger.info(`Company details inserted successfully for userId ${userId}`);
             callback(null, response);
         });
 }
@@ -41,8 +34,8 @@ function getCompany(userId, callback) {
         [userId],
         (error, results) => {
             if (error) {
-                console.error('Error executing MySQL query:', error);
-                return callback({ error: 'Internal Server Error' }, null);
+                logger.error(`Error executing MySQL query: ${error.message}`);
+                return callback(generateErrorResponse('Internal Server Error', 'Error fetching company details', 500), null);
             }
             const companyDetail = results.map(row => ({
                 company: row.company,
@@ -50,36 +43,28 @@ function getCompany(userId, callback) {
                 description: row.description,
                 insert_datetime: row.insert_datetime,
             }));
-            const response = {
-                transaction: {
-                    message: 'OK',
-                    dateTime: dateTime()
-                },
-                result: companyDetail
-            };
+            const response = generateSuccessResponse({ result: companyDetail });
+            logger.info(`Company details fetched successfully for userId ${userId}`);
             callback(null, response);
         });
 }
 
-function updateCompany(userId, companyId, education, callback) {
-    const { company, jobTitle, description } = education;
+function updateCompany(userId, companyId, companyDetail, callback) {
+    const { company, jobTitle, description } = companyDetail;
 
     db.query('UPDATE cons_companydetail SET company = ?, jobTitle = ?, description = ?, insert_datetime = ? WHERE userId = ? AND companyId = ?',
         [company, jobTitle, description, generateTimestamp(), userId, companyId],
         (error, results) => {
             if (error) {
-                console.error('Error executing MySQL query:', error);
-                return callback({ error: 'Internal Server Error' }, null);
+                logger.error(`Error executing MySQL query: ${error.message}`);
+                return callback(generateErrorResponse('Internal Server Error', 'Error updating company details', 500), null);
             }
-            const response = {
-                transaction: {
-                    message: 'OK',
-                    dateTime: dateTime()
-                },
+            const response = generateSuccessResponse({
                 result: {
                     message: 'Company details updated successfully'
                 }
-            };
+            });
+            logger.info(`Company details updated successfully for userId ${userId}`);
             callback(null, response);
         });
 }

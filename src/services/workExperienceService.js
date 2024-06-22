@@ -1,44 +1,33 @@
 // services/workExperienceService.js
 const db = require('../db');
 const { dateTime } = require('../utils/timestamp');
+const { generateErrorResponse, generateSuccessResponse } = require('../utils/response');
+const logger = require('../utils/logger');
 
 function insertWorkExperience(userId, workExperiences, callback) {
     const insertPromises = workExperiences.map(workExperience => {
         const { position, company, currentEmployer, description, startDate, endDate } = workExperience;
 
-        console.log('Inserting work experience:', userId, position, company, currentEmployer, description, startDate, endDate);
+        logger.info(`Inserting work experience: ${userId}, ${position}, ${company}, ${currentEmployer}, ${description}, ${startDate}, ${endDate}`);
 
         return new Promise((resolve, reject) => {
             db.query('INSERT INTO cons_workexperience (userId, position, company, currentEmployer, description, startDate, endDate) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 [userId, position, company, currentEmployer, description, startDate, endDate],
                 (error, results) => {
                     if (error) {
-                        console.error('Error executing MySQL query:', error);
+                        logger.error('Error executing MySQL query:', error);
                         if (error.code === 'ER_NO_REFERENCED_ROW_2') {
-                            console.log('User ID not found:', userId);
-                            const response = {
-                                transaction: {
-                                    message: 'Error',
-                                    detail: 'User ID not found',
-                                    dateTime: dateTime()
-                                }
-                            };
+                            const response = generateErrorResponse('User ID not found', 'User ID does not exist in the database', 400);
+                            logger.error(`Error inserting work experience: ${response.transaction.detail}`);
                             return reject(response);
                         } else {
-                            console.error('Internal Server Error');
-                            return reject({ error: 'Internal Server Error' });
+                            const response = generateErrorResponse('Internal Server Error', 'Error executing MySQL query');
+                            logger.error('Internal Server Error');
+                            return reject(response);
                         }
                     }
-                    console.log('Work experience inserted successfully');
-                    const response = {
-                        transaction: {
-                            message: 'OK',
-                            dateTime: dateTime()
-                        },
-                        result: {
-                            message: 'Work experience inserted successfully'
-                        }
-                    };
+                    const response = generateSuccessResponse({ message: 'Work experience inserted successfully' });
+                    logger.info('Work experience inserted successfully');
                     resolve(response);
                 });
         });
@@ -46,14 +35,12 @@ function insertWorkExperience(userId, workExperiences, callback) {
 
     Promise.all(insertPromises)
         .then(responses => {
-            // Return an array of responses for each inserted work experience
             callback(null, responses);
         })
         .catch(error => {
             callback(error, null);
         });
 }
-
 
 function getWorkExperience(userId, callback) {
     let query = 'SELECT * FROM cons_workexperience';
@@ -66,17 +53,17 @@ function getWorkExperience(userId, callback) {
 
     db.query(query, queryParams, (error, results) => {
         if (error) {
-            console.error('Error executing MySQL query:', error);
-            return callback({ error: 'Internal Server Error' }, null);
+            logger.error('Error executing MySQL query:', error);
+            const response = generateErrorResponse('Internal Server Error', 'Error executing MySQL query');
+            return callback(response, null);
         }
-        
+
         const transaction = {
             message: 'OK',
             dateTime: dateTime()
         };
-        
+
         if (!userId) {
-            // If userId is not provided, return empty array for result
             const response = {
                 transaction: transaction,
                 result: []
@@ -85,18 +72,11 @@ function getWorkExperience(userId, callback) {
         }
 
         if (results.length === 0) {
-            // If userId is provided but no results are found, return error message
-            const response = {
-                transaction: transaction,
-                error: {
-                    message: 'User ID not found',
-                    // detail: 'User ID does not exist in the database',
-                    dateTime: dateTime()
-                }
-            };
+            const response = generateErrorResponse('User ID not found', 'User ID does not exist in the database', 400);
+            logger.error(`Error fetching work experience: ${response.transaction.detail}`);
             return callback(null, response);
         }
-        
+
         const workExperiences = results.map(row => ({
             userId: row.userId,
             position: row.position,
@@ -106,20 +86,15 @@ function getWorkExperience(userId, callback) {
             startDate: row.startDate,
             endDate: row.endDate
         }));
-        
-        const response = {
-            transaction: transaction,
-            result: workExperiences
-        };
-        
+
+        const response = generateSuccessResponse({ result: workExperiences });
+        logger.info(`Work experiences retrieved successfully for userId ${userId}`);
         callback(null, response);
     });
 }
 
 function updateWorkExperience(userId, workExperienceId, workExperienceData, callback) {
     const { position, company, currentEmployer, description, startDate, endDate } = workExperienceData;
-
-    // Format the start date and end date
     const formattedStartDate = formatDate(startDate);
     const formattedEndDate = formatDate(endDate);
 
@@ -127,18 +102,13 @@ function updateWorkExperience(userId, workExperienceId, workExperienceData, call
         [position, company, currentEmployer, description, formattedStartDate, formattedEndDate, userId, workExperienceId],
         (error, results) => {
             if (error) {
-                console.error('Error executing MySQL query:', error);
-                return callback({ error: 'Internal Server Error' }, null);
+                logger.error('Error executing MySQL query:', error);
+                const response = generateErrorResponse('Internal Server Error', 'Error executing MySQL query');
+                return callback(response, null);
             }
-            const response = {
-                transaction: {
-                    message: 'OK',
-                    dateTime: dateTime()
-                },
-                result: {
-                    message: 'Work Experience updated successfully'
-                }
-            };
+
+            const response = generateSuccessResponse({ message: 'Work Experience updated successfully' });
+            logger.info(`Work experience updated successfully for userId ${userId}, workExperienceId ${workExperienceId}`);
             callback(null, response);
         });
 }
