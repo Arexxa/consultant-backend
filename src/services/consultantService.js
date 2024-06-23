@@ -9,10 +9,13 @@ function getUserList(callback) {
             p.userId,
             p.roleId,
             p.name,
+            p.email,
+            p.contact_no,
             p.status,
             w.WorkExperienceID AS workExperienceId,
             w.position AS workPosition,
             w.currentEmployer AS workCurrentEmployer,
+            w.uploadDate as lastUpdated,
             a.documentID AS documentId,
             a.documentType,
             a.fileData,
@@ -44,6 +47,8 @@ function getUserList(callback) {
                         userId: row.userId,
                         roleId: row.roleId,
                         name: row.name,
+                        email: row.email,
+                        contact_no: row.contact_no,
                         status: row.status,
                         applications: [],
                         workExperience: [],
@@ -74,6 +79,7 @@ function getUserList(callback) {
                             workExperienceId: row.workExperienceId,
                             position: row.workPosition,
                             currentEmployer: row.workCurrentEmployer,
+                            uploadDate: row.lastUpdated
                         });
                     }
                 }

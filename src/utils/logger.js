@@ -3,21 +3,15 @@ const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, printf } = format;
 require('winston-daily-rotate-file');
 
-// Custom function to format date
-const dateTime = () => {
-    const malaysiaOptions = { timeZone: 'Asia/Kuala_Lumpur' };
-    return new Date().toLocaleString('en-GB', malaysiaOptions);
-};
-
 const logFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} ${level}: ${message}`;
 });
 
 const logger = createLogger({
-  format: combine(
-    timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), // Adjusted date pattern
-    logFormat
-  ),
+    format: combine(
+        timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), // Adjusted date pattern
+        logFormat
+    ),
   transports: [
     new transports.Console(), // Log to the console
     new transports.DailyRotateFile({
@@ -33,4 +27,4 @@ const logger = createLogger({
   ]
 });
 
-module.exports = { logger, dateTime };
+module.exports = logger;

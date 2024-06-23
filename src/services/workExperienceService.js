@@ -1,18 +1,20 @@
 // services/workExperienceService.js
 const db = require('../db');
-const { dateTime } = require('../utils/timestamp');
+const { generateTimestamp, dateTime } = require('../utils/timestamp');
 const { generateErrorResponse, generateSuccessResponse } = require('../utils/response');
 const logger = require('../utils/logger');
 
 function insertWorkExperience(userId, workExperiences, callback) {
     const insertPromises = workExperiences.map(workExperience => {
         const { position, company, currentEmployer, description, startDate, endDate } = workExperience;
+        const uploadDate = generateTimestamp();
 
         logger.info(`Inserting work experience: ${userId}, ${position}, ${company}, ${currentEmployer}, ${description}, ${startDate}, ${endDate}`);
 
         return new Promise((resolve, reject) => {
-            db.query('INSERT INTO cons_workexperience (userId, position, company, currentEmployer, description, startDate, endDate) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [userId, position, company, currentEmployer, description, startDate, endDate],
+            db.query(
+                'INSERT INTO cons_workexperience (userId, position, company, currentEmployer, description, startDate, endDate, uploadDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [userId, position, company, currentEmployer, description, startDate, endDate, uploadDate],
                 (error, results) => {
                     if (error) {
                         logger.error('Error executing MySQL query:', error);
@@ -29,7 +31,8 @@ function insertWorkExperience(userId, workExperiences, callback) {
                     const response = generateSuccessResponse({ message: 'Work experience inserted successfully' });
                     logger.info('Work experience inserted successfully');
                     resolve(response);
-                });
+                }
+            );
         });
     });
 
@@ -97,9 +100,11 @@ function updateWorkExperience(userId, workExperienceId, workExperienceData, call
     const { position, company, currentEmployer, description, startDate, endDate } = workExperienceData;
     const formattedStartDate = formatDate(startDate);
     const formattedEndDate = formatDate(endDate);
+    const uploadDate = generateTimestamp();
 
-    db.query('UPDATE cons_workexperience SET position = ?, company = ?, currentEmployer = ?, description = ?, startDate = ?, endDate = ? WHERE userId = ? AND WorkExperienceID = ?',
-        [position, company, currentEmployer, description, formattedStartDate, formattedEndDate, userId, workExperienceId],
+    db.query(
+        'UPDATE cons_workexperience SET position = ?, company = ?, currentEmployer = ?, description = ?, startDate = ?, endDate = ?, uploadDate = ? WHERE userId = ? AND WorkExperienceID = ?',
+        [position, company, currentEmployer, description, formattedStartDate, formattedEndDate, uploadDate, userId, workExperienceId],
         (error, results) => {
             if (error) {
                 logger.error('Error executing MySQL query:', error);
@@ -110,7 +115,8 @@ function updateWorkExperience(userId, workExperienceId, workExperienceData, call
             const response = generateSuccessResponse({ message: 'Work Experience updated successfully' });
             logger.info(`Work experience updated successfully for userId ${userId}, workExperienceId ${workExperienceId}`);
             callback(null, response);
-        });
+        }
+    );
 }
 
 function formatDate(dateString) {
