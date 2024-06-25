@@ -2,26 +2,20 @@
 const bcrypt = require('bcrypt');
 const db = require('../db');
 const { generateTimestamp, dateTime } = require('../utils/timestamp');
+const { generateErrorResponse, generateSuccessResponse } = require('../utils/response');
+const logger = require('../utils/logger');
 const Role = require('../models/Roles');
 const AdminRegister = require('../models/Admin/Register');
 
 function getRolesId(callback) {
     db.query('SELECT * FROM cons_role', (error, results) => {
         if (error) {
-            console.error('Error executing MySQL query:', error);
-            callback(error, null);
-            return;
+            logger.error('Error executing MySQL query:', error);
+            const response = generateErrorResponse('Internal Server Error', 'Error executing MySQL query');
+            return callback(response, null);
         }
         const roles = results.map(row => new Role(row.roleId, row.role_name));
-
-        const response = {
-            transaction: {
-                message: 'OK',
-                dateTime: dateTime()
-            },
-            result: roles
-        };
-
+        const response = generateSuccessResponse({ result: roles });
         callback(null, response);
     });
 }
@@ -29,9 +23,9 @@ function getRolesId(callback) {
 function getLastUserId(callback) {
     db.query('SELECT MAX(userId) AS lastUserId FROM cons_profile', (error, results) => {
         if (error) {
-            console.error('Error executing MySQL query:', error);
-            callback(error, null);
-            return;
+            logger.error('Error executing MySQL query:', error);
+            const response = generateErrorResponse('Internal Server Error', 'Error executing MySQL query');
+            return callback(response, null);
         }
         const lastUserId = results[0].lastUserId;
         callback(null, lastUserId);
@@ -50,47 +44,32 @@ function registerAdmin(adminData, callback) {
         certificate
     } = adminData;
 
-    // Check if required fields are provided
     if (!email || !password) {
-        const response = {
-            transaction: {
-                message: 'Error',
-                detail: 'Please provide email and password',
-                dateTime: dateTime()
-            }
-        };
+        const response = generateErrorResponse('Please provide email and password', 'Validation Error', 400);
+        logger.error(`Error registering admin: ${response.transaction.detail}`);
         return callback(response, null);
     }
 
     if (!name) {
-        const response = {
-            transaction: {
-                message: 'Error',
-                detail: 'Please provide your name',
-                dateTime: dateTime()
-            }
-        };
+        const response = generateErrorResponse('Please provide your name', 'Validation Error', 400);
+        logger.error(`Error registering admin: ${response.transaction.detail}`);
         return callback(response, null);
     }
 
     bcrypt.hash(password, 10, (err, hashedPassword) => {
         if (err) {
-            console.error('Error hashing password:', err);
-            callback(err, null);
-            return;
+            logger.error('Error hashing password:', err);
+            return callback(generateErrorResponse('Internal Server Error', 'Error hashing password'), null);
         }
 
-        // Get the last userId from the database
         getLastUserId((error, lastUserId) => {
             if (error) {
-                console.error('Error getting last userId:', error);
-                return callback({ error: 'Internal Server Error' }, null);
+                logger.error('Error getting last userId:', error);
+                return callback(generateErrorResponse('Internal Server Error', 'Error getting last userId'), null);
             }
 
-            // Generate the userId based on the last userId or start from 1001 if there are no existing userIds
             let nextUserIdNumber = lastUserId ? parseInt(lastUserId.split('-')[1]) + 1 : 1001;
             const userId = `user-${nextUserIdNumber}`;
-
             const insertDateTime = generateTimestamp();
 
             const admin = new AdminRegister(
@@ -112,37 +91,26 @@ function registerAdmin(adminData, callback) {
                 (error, results) => {
                     if (error) {
                         if (error.code === 'ER_DUP_ENTRY') {
-                            const response = {
-                                transaction: {
-                                    message: 'Error',
-                                    detail: 'Email already exists',
-                                    dateTime: dateTime()
-                                }
-                            };
+                            const response = generateErrorResponse('Email already exists', 'Duplicate Entry', 400);
+                            logger.error(`Error registering admin: ${response.transaction.detail}`);
                             return callback(response, null);
                         }
-                            console.error('Error executing MySQL query:', error);
-                            callback({ error: 'Internal Server Error' }, null);
-                            return;
+                        logger.error('Error executing MySQL query:', error);
+                        return callback(generateErrorResponse('Internal Server Error', 'Error executing MySQL query'), null);
                     }
 
-                    const response = {
-                        transaction: {
-                            message: 'Admin registered successfully',
-                            dateTime: dateTime()
-                        },
+                    const response = generateSuccessResponse({
                         result: {
                             userId: results.insertId,
                             ...admin
                         }
-                    };
-
+                    });
+                    logger.info(`Admin registered successfully with userId ${userId}`);
                     callback(null, response);
                 }
             );
         });
     });
 }
-
 
 module.exports = { getRolesId, registerAdmin, getLastUserId };

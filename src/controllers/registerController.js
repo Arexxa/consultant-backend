@@ -1,4 +1,3 @@
-// services/registerController.js
 const logger = require('../utils/logger');
 const registerService = require('../services/registerService');
 
@@ -10,6 +9,7 @@ function getAllUsers(req, res) {
             res.status(500).json({ error: 'Internal Server Error' });
             return;
         }
+        logger.info('All users retrieved successfully');
         res.json(results);
     });
 }
@@ -24,6 +24,7 @@ function registerUser(req, res) {
             const status = error.status === 400 ? 400 : 500;
             return res.status(status).json({ transaction: error.transaction });
         }
+        logger.info('User registered successfully:', result.userRegister.userId);
         res.status(200).json(result);
     });
 }
@@ -37,6 +38,7 @@ function updateRegisterUser(req, res) {
             logger.error(`Error updating user profile: ${error.transaction.detail}`);
             return res.status(500).json({ error: 'Internal Server Error' });
         }
+        logger.info('User profile updated successfully:', userId);
         res.status(200).json(result);
     });
 }

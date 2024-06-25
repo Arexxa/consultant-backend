@@ -1,9 +1,11 @@
 // get user list
 const consultantService = require('../services/consultantService');
+const logger = require('../utils/logger');
 
 function getUserList(req, res) {
     consultantService.getUserList((error, results) => {
         if (error) {
+            logger.error(`Error getting user list: ${error.message}`);
             res.status(500).json({ error: 'Internal Server Error' });
             return;
         }
@@ -22,6 +24,7 @@ function addOrUpdateNote(req, res) {
 
     consultantService.addOrUpdateNote(userId, noteId, { title, description }, (error, result) => {
         if (error) {
+            logger.error(`Error in addOrUpdateNote service: ${error.message}`);
             console.error(`Error in addOrUpdateNote service: ${error.error}`);
             return res.status(500).json({ error: 'Internal Server Error' });
         }
@@ -38,6 +41,7 @@ const updateUserStatus = (req, res) => {
   
     consultantService.updateUserStatus(userId, status, (error, result) => {
       if (error) {
+        logger.error(`Error in updateUserStatus service: ${error.message}`);
         console.error(`Error in updateUserStatus service: ${error.error}`);
         return res.status(500).json({ error: 'Internal Server Error' });
       }

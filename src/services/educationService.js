@@ -1,6 +1,8 @@
 // services/educationService.js
 const db = require('../db');
 const { dateTime } = require('../utils/timestamp');
+const { generateErrorResponse, generateSuccessResponse } = require('../utils/response');
+const logger = require('../utils/logger');
 
 function insertEducation(userId, education, callback) {
     const { university, course, domain, startDate, endDate } = education;
@@ -10,28 +12,19 @@ function insertEducation(userId, education, callback) {
         (error, results) => {
             if (error) {
                 if (error.code === 'ER_NO_REFERENCED_ROW_2') {
-                    const response = {
-                        transaction: {
-                            message: 'Error',
-                            detail: 'User ID not found',
-                            dateTime: dateTime()
-                        }
-                    };
-                    return callback(response, null);
+                    logger.error(`User ID not found: ${userId} - ${error.message}`);
+                    return callback(generateErrorResponse('User ID not found', 'User ID not found', 400), null);
                 } else {
-                    console.error('Error executing MySQL query:', error);
-                    return callback({ error: 'Internal Server Error' }, null);
+                    logger.error(`Error executing MySQL query: ${error.message}`);
+                    return callback(generateErrorResponse('Internal Server Error', 'Error inserting education', 500), null);
                 }
             }
-            const response = {
-                transaction: {
-                    message: 'OK',
-                    dateTime: dateTime()
-                },
+            const response = generateSuccessResponse({
                 result: {
                     message: 'Education inserted successfully'
                 }
-            };
+            });
+            logger.info(`Education inserted successfully for userId ${userId}`);
             callback(null, response);
         });
 }
@@ -41,8 +34,8 @@ function getEducation(userId, callback) {
         [userId],
         (error, results) => {
             if (error) {
-                console.error('Error executing MySQL query:', error);
-                return callback({ error: 'Internal Server Error' }, null);
+                logger.error(`Error executing MySQL query: ${error.message}`);
+                return callback(generateErrorResponse('Internal Server Error', 'Error fetching education', 500), null);
             }
             const education = results.map(row => ({
                 university: row.university,
@@ -51,13 +44,8 @@ function getEducation(userId, callback) {
                 endDate: row.endDate,
                 domain: row.domain,
             }));
-            const response = {
-                transaction: {
-                    message: 'OK',
-                    dateTime: dateTime()
-                },
-                result: education
-            };
+            const response = generateSuccessResponse({ result: education });
+            logger.info(`Education fetched successfully for userId ${userId}`);
             callback(null, response);
         });
 }
@@ -73,18 +61,15 @@ function updateEducation(userId, educationId, education, callback) {
         [university, course, domain, formattedStartDate, formattedEndDate, userId, educationId],
         (error, results) => {
             if (error) {
-                console.error('Error executing MySQL query:', error);
-                return callback({ error: 'Internal Server Error' }, null);
+                logger.error(`Error executing MySQL query: ${error.message}`);
+                return callback(generateErrorResponse('Internal Server Error', 'Error updating education', 500), null);
             }
-            const response = {
-                transaction: {
-                    message: 'OK',
-                    dateTime: dateTime()
-                },
+            const response = generateSuccessResponse({
                 result: {
                     message: 'Education updated successfully'
                 }
-            };
+            });
+            logger.info(`Education updated successfully for userId ${userId}`);
             callback(null, response);
         });
 }

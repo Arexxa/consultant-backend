@@ -1,5 +1,7 @@
 const db = require('../db');
 const { generateTimestamp, dateTime } = require('../utils/timestamp');
+const { generateErrorResponse, generateSuccessResponse } = require('../utils/response');
+const logger = require('../utils/logger');
 
 function getUserListByAdmin(callback) {
     db.query(
@@ -25,12 +27,15 @@ function getUserListByAdmin(callback) {
         WHERE p.roleId != '1'`,
         (error, results) => {
             if (error) {
-                console.error('Error executing MySQL query:', error);
-                return callback({ error: 'Internal Server Error' }, null);
+                logger.error('Error executing MySQL query:', error);
+                const response = generateErrorResponse('Internal Server Error', 'Error executing MySQL query');
+                return callback(response, null);
             }
 
             if (results.length === 0) {
-                return callback({ error: 'Users not found' }, null);
+                const response = generateErrorResponse('Users not found', 'No users found in the database', 404);
+                logger.error('Users not found');
+                return callback(null, response);
             }
 
             const userMap = {};
@@ -62,12 +67,10 @@ function getUserListByAdmin(callback) {
                     }
                 }
 
-                // Populate workexperience (only 1)
+                // Populate work experience (only 1)
                 if (row.workExperienceId && row.workCurrentEmployer === 1) {
-                    // Check if the user already has a work experience with current employer
                     const currentEmployerIndex = userMap[row.userId].workExperience.findIndex(we => we.workCurrentEmployer === 1);
                     if (currentEmployerIndex === -1) {
-                        // If the user doesn't have a work experience with current employer, add it
                         userMap[row.userId].workExperience.push({
                             workExperienceId: row.workExperienceId,
                             position: row.workPosition,
@@ -91,14 +94,8 @@ function getUserListByAdmin(callback) {
 
             const userProfiles = Object.values(userMap);
 
-            const response = {
-                transaction: {
-                    message: 'OK',
-                    dateTime: dateTime()
-                },
-                result: userProfiles
-            };
-
+            const response = generateSuccessResponse({ result: userProfiles });
+            logger.info('User profiles retrieved successfully');
             callback(null, response);
         }
     );
